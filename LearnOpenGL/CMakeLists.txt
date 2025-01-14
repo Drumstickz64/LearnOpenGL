@@ -14,4 +14,10 @@ if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET LearnOpenGL PROPERTY CXX_STANDARD 20)
 endif()
 
+if (MSVC)
+  target_compile_options(LearnOpenGL PRIVATE /W3)
+else()
+  target_compile_options(LearnOpenGL PRIVATE -Wall -Wextra)
+endif()
+
 # TODO: Add tests and install targets if needed.
