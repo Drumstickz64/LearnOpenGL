@@ -9,21 +9,31 @@
 
 const int32_t WINDOW_WIDTH = 800;
 const int32_t WINDOW_HEIGHT = 600;
-const int32_t TRIANGLE_COUNT = 2;
+const size_t TRIANGLE_COUNT = 2;
 
-const char* VERTEX_SHADER_SOURCE = "#version 330 core\n"
+const GLchar* VERTEX_SHADER_SOURCE = "#version 330 core\n"
 	"layout (location = 0) in vec3 aPos;\n"
 	"void main()\n"
 	"{\n"
 	"   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
 	"}\0";
 
-const char* FRAGMENT_SHADER_SOURCE = "#version 330 core\n"
+const GLchar* FRAGMENT_SHADER_SOURCES[TRIANGLE_COUNT] = {
+	// first shader
+	"#version 330 core\n"
 	"out vec4 FragColor;\n"
 	"void main()\n"
 	"{\n"
 	"   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-	"}\n\0";
+	"}\n\0",
+	// second shader
+	"#version 330 core\n"
+	"out vec4 FragColor;\n"
+	"void main()\n"
+	"{\n"
+	"   FragColor = vec4(1.0f, 1.0f, 0.0f, 1.0f);\n"
+	"}\n\0",
+};
 
 static void framebuffer_size_callback(GLFWwindow* window, int32_t width, int32_t height) {
 	glViewport(0, 0, width, height);
@@ -68,33 +78,43 @@ int main()
 		return -1;
 	}
 
-	GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragment_shader, 1, &FRAGMENT_SHADER_SOURCE, nullptr);
-	glCompileShader(fragment_shader);
-	GLint fragment_shader_compile_success;
-	glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &fragment_shader_compile_success);
-	if (!fragment_shader_compile_success) {
-		GLchar info_log[512];
-		glGetShaderInfoLog(fragment_shader, 512, nullptr, info_log);
-		std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << info_log << std::endl;
-		return -1;
-	}
+	GLuint fragment_shaders[TRIANGLE_COUNT];
+	GLuint shader_programs[TRIANGLE_COUNT];
 
-	GLuint shader_program = glCreateProgram();
-	glAttachShader(shader_program, vertex_shader);
-	glAttachShader(shader_program, fragment_shader);
-	glLinkProgram(shader_program);
-	GLint shader_program_link_success;
-	glGetProgramiv(shader_program, GL_COMPILE_STATUS, &shader_program_link_success);
-	if (!shader_program_link_success) {
-		GLchar info_log[512];
-		glGetProgramInfoLog(shader_program, 512, nullptr, info_log);
-		std::cout << "ERROR::SHADER::PROGRAM::CREATION_FAILED\n" << info_log << std::endl;
-		return -1;
-	}
+	for (size_t i = 0; i < TRIANGLE_COUNT; i++) {
+		fragment_shaders[i] = glCreateShader(GL_FRAGMENT_SHADER);
+		GLuint fragment_shader = fragment_shaders[i];
 
+		glShaderSource(fragment_shader, 1, &FRAGMENT_SHADER_SOURCES[i], nullptr);
+		glCompileShader(fragment_shader);
+		GLint fragment_shader_compile_success;
+		glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &fragment_shader_compile_success);
+		if (!fragment_shader_compile_success) {
+			GLchar info_log[512];
+			glGetShaderInfoLog(fragment_shader, 512, nullptr, info_log);
+			std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << info_log << std::endl;
+			return -1;
+		}
+
+		shader_programs[i] = glCreateProgram();
+		GLuint shader_program = shader_programs[i];
+
+		glAttachShader(shader_program, vertex_shader);
+		glAttachShader(shader_program, fragment_shader);
+		glLinkProgram(shader_program);
+		GLint shader_program_link_success;
+		glGetProgramiv(shader_program, GL_COMPILE_STATUS, &shader_program_link_success);
+		if (!shader_program_link_success) {
+			GLchar info_log[512];
+			glGetProgramInfoLog(shader_program, 512, nullptr, info_log);
+			std::cout << "ERROR::SHADER::PROGRAM::CREATION_FAILED\n" << info_log << std::endl;
+			return -1;
+		}
+
+		glDeleteShader(fragment_shader);
+	}
 	glDeleteShader(vertex_shader);
-	glDeleteShader(fragment_shader);
+
 
 	float triangle_vertices[TRIANGLE_COUNT][9] = {
 		{
@@ -130,8 +150,8 @@ int main()
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(shader_program);
 		for (size_t i = 0; i < TRIANGLE_COUNT; i++) {
+			glUseProgram(shader_programs[i]);
 			glBindVertexArray(vaos[i]);
 			glDrawArrays(GL_TRIANGLES, 0, 3);
 		}
