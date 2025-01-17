@@ -2,10 +2,11 @@
 # project specific logic here.
 
 # Add source to this project's executable.
-add_executable (LearnOpenGL "main.cpp" "shader_program.cpp" "shader_program.h" "fs_util.h" "fs_util.cpp" "stb_image.h")
+add_executable (LearnOpenGL "main.cpp" "shader_program.cpp" "shader_program.h" "fs_util.h" "fs_util.cpp")
 
 target_link_libraries(LearnOpenGL PRIVATE glad)
 target_link_libraries(LearnOpenGL PRIVATE glfw)
+target_link_libraries(LearnOpenGL PRIVATE stb_image)
 
 configure_file(
     "${PROJECT_SOURCE_DIR}/LearnOpenGL/config.h.in"

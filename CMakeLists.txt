@@ -14,6 +14,7 @@ project(LearnOpenGL)
 # Include sub-projects.
 add_subdirectory(deps/glad)
 add_subdirectory(deps/glfw)
+add_subdirectory(deps/stb_image)
 add_subdirectory(LearnOpenGL)
 
 if(CMAKE_VERSION VERSION_GREATER 3.12)
