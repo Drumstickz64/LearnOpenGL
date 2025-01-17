@@ -1,1 +1,0 @@
-#define SHADER_PATH "@CMAKE_SOURCE_DIR@/shaders/"

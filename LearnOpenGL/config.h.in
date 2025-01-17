@@ -1,0 +1,8 @@
+#pragma once
+
+#include <filesystem>
+
+namespace Paths {
+	const std::filesystem::path SHADER_PATH = "@CMAKE_SOURCE_DIR@/shaders/";
+	const std::filesystem::path ASSET_PATH = "@CMAKE_SOURCE_DIR@/assets/";
+}

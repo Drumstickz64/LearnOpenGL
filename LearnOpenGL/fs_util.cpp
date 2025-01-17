@@ -1,7 +1,13 @@
-#include "fs.h"
+#include <filesystem>
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <cstdlib>
 
-std::string read_file(const std::string& filename)
-{
+#include "fs_util.h"
+
+std::string fs_util::read_file(const std::filesystem::path& filename) {
     std::ifstream file(filename);
     if (!file) {
         std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ: " << filename << std::endl;
