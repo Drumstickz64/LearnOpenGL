@@ -15,6 +15,8 @@
 constexpr int32_t WINDOW_WIDTH = 800;
 constexpr int32_t WINDOW_HEIGHT = 600;
 
+static GLfloat mix_percentage = 0.2f;
+
 static void framebuffer_size_callback(GLFWwindow* window, int32_t width, int32_t height) {
 	glViewport(0, 0, width, height);
 }
@@ -63,8 +65,8 @@ int main() {
 	glGenTextures(1, &container_texture);
 	glBindTexture(GL_TEXTURE_2D, container_texture);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -95,10 +97,10 @@ int main() {
 
 	float vertices[] = {
 		// positions          // colors           // texture coords
-		 0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
-		 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
+		 0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   2.0f, 2.0f,   // top right
+		 0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   2.0f, 0.0f,   // bottom right
 		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 2.0f    // top left 
 	};
 
 	unsigned int indices[] = {  // note that we start from 0!
@@ -128,10 +130,20 @@ int main() {
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 	while (!glfwWindowShouldClose(window)) {
+		program.use();
+
+		if (glfwGetKey(window, GLFW_KEY_UP)) {
+			mix_percentage = std::fminf(mix_percentage + 0.02f, 1.0f);
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_DOWN)) {
+			mix_percentage = std::fmaxf(mix_percentage - 0.02f, 0.0f);
+		}
+
+		program.set_float("mixPercentage", mix_percentage);
+
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-
-		program.use();
 
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, face_texture);
