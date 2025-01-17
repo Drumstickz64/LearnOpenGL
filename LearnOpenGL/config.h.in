@@ -2,7 +2,7 @@
 
 #include <filesystem>
 
-namespace Paths {
+namespace paths {
 	const std::filesystem::path SHADER_PATH = "@CMAKE_SOURCE_DIR@/shaders/";
 	const std::filesystem::path ASSET_PATH = "@CMAKE_SOURCE_DIR@/assets/";
 }
