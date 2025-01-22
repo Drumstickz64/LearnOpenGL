@@ -5,8 +5,10 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -14,12 +16,53 @@
 #include "config.h"
 #include "fs_util.h"
 #include "shader_program.h"
+#include "camera.h"
 
-constexpr int32_t WINDOW_WIDTH = 800;
-constexpr int32_t WINDOW_HEIGHT = 600;
+static auto camera = Camera(
+	glm::vec3(0.0f, 0.0f, 3.0f),
+	glm::vec3(0.0f, 0.0f, -1.0f),
+	glm::vec3(0.0f, 1.0f, 0.0f)
+);
 
 static void framebuffer_size_callback(GLFWwindow* window, int32_t width, int32_t height) {
 	glViewport(0, 0, width, height);
+}
+
+static void process_input(GLFWwindow* window, float delta_time) {
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+		glfwSetWindowShouldClose(window, true);
+	}
+
+	auto input_direction = glm::vec2(0.0f);
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+		input_direction.y += 1.0f;
+	}
+	
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+		input_direction.y -= 1.0f;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+		input_direction.x -= 1.0f;
+	}
+
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+		input_direction.x += 1.0f;
+	}
+
+	if (glm::length(input_direction) > 1.0f) {
+		input_direction = glm::normalize(input_direction);
+	}
+
+	camera.move(input_direction, delta_time);
+}
+
+static void mouse_callback(GLFWwindow* window, double x_pos, double y_pos) {
+	camera.update_look_direction(static_cast<float>(x_pos), static_cast<float>(y_pos));
+}
+
+static void scroll_callback(GLFWwindow* window, double x_offset, double y_offset) {
+	camera.change_zoom(static_cast<float>(y_offset));
 }
 
 int main() {
@@ -35,13 +78,17 @@ int main() {
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-	GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Learning OpenGL", nullptr, nullptr);
+	GLFWwindow* window = glfwCreateWindow(constants::WINDOW_WIDTH, constants::WINDOW_HEIGHT, "Learning OpenGL", nullptr, nullptr);
 	if (window == nullptr) {
 		std::cout << "failed to create GLFW window" << std::endl;
 		glfwTerminate();
 		return -1;
 	}
 	glfwMakeContextCurrent(window);
+
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "failed to initialize GLAD" << std::endl;
@@ -50,18 +97,18 @@ int main() {
 
 	glEnable(GL_DEPTH_TEST);
 
-	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+	glViewport(0, 0, constants::WINDOW_WIDTH, constants::WINDOW_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 #pragma endregion
 
 #pragma region shader
-	std::string vertex_shader = fs_util::read_file(paths::SHADER_PATH / "shader.vert");
-	std::string fragment_shader = fs_util::read_file(paths::SHADER_PATH / "shader.frag");
+	std::string vertex_shader = fs_util::read_file(constants::SHADER_PATH / "shader.vert");
+	std::string fragment_shader = fs_util::read_file(constants::SHADER_PATH / "shader.frag");
 	Shader_Program program = Shader_Program(vertex_shader, fragment_shader);
 #pragma endregion
 
 #pragma region textures
-	std::filesystem::path container_image_path = paths::ASSET_PATH / "container.jpg";
+	std::filesystem::path container_image_path = constants::ASSET_PATH / "container.jpg";
 	int container_image_width, container_image_height, container_image_num_chans;
 	uint8_t* container_image_data = stbi_load(container_image_path.string().c_str(), &container_image_width, &container_image_height, &container_image_num_chans, 0);
 	if (!container_image_data) {
@@ -83,7 +130,7 @@ int main() {
 
 	stbi_image_free(container_image_data);
 
-	std::filesystem::path face_image_path = paths::ASSET_PATH / "awesomeface.png";
+	std::filesystem::path face_image_path = constants::ASSET_PATH / "awesomeface.png";
 	int face_image_width, face_image_height, face_image_num_chans;
 	uint8_t* face_image_data = stbi_load(face_image_path.string().c_str(), &face_image_width, &face_image_height, &face_image_num_chans, 0);
 	if (!face_image_data) {
@@ -176,23 +223,17 @@ int main() {
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
-
-	auto view = glm::mat4(1.0f);
-	view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
-
-	auto projection = glm::perspective(
-		glm::radians(45.0f),
-		static_cast<float>(WINDOW_WIDTH) / static_cast<float>(WINDOW_HEIGHT),
-		0.1f,
-		100.0f
-	);
 #pragma endregion
 
 #pragma region loop
+	float last_frame = 0.0f;
+
 	while (!glfwWindowShouldClose(window)) {
-		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-			glfwSetWindowShouldClose(window, true);
-		}
+		float time = static_cast<float>(glfwGetTime());
+		float delta_time = time - last_frame;
+		last_frame = time;
+
+		process_input(window, delta_time);
 
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -207,8 +248,11 @@ int main() {
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, container_texture);
 		program.set_int("texture1", 1);
-
+		
+		glm::mat4 view = camera.calculate_view_matrix();
 		program.set_mat4("view", view);
+
+		glm::mat4 projection = camera.calculate_projection_matrix();
 		program.set_mat4("projection", projection);
 
 		for (size_t i = 0; i < 10; i++) {
@@ -225,6 +269,9 @@ int main() {
 	}
 #pragma endregion
 
+#pragma region shutdown
 	glfwTerminate();
+#pragma endregion
+
 	return 0;
 }

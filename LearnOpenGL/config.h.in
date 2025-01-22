@@ -2,7 +2,11 @@
 
 #include <filesystem>
 
-namespace paths {
+namespace constants {
 	const std::filesystem::path SHADER_PATH = "@CMAKE_SOURCE_DIR@/shaders/";
 	const std::filesystem::path ASSET_PATH = "@CMAKE_SOURCE_DIR@/assets/";
+
+	constexpr int32_t WINDOW_WIDTH = 800;
+	constexpr int32_t WINDOW_HEIGHT = 600;
+	constexpr float MOUSE_SENSETIVIY = 0.1f;
 }
