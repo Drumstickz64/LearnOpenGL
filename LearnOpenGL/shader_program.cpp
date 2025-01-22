@@ -7,10 +7,10 @@
 
 #include "shader_program.h"
 
-Shader_Program::Shader_Program(const std::string& vertexSource, const std::string& fragmentSource) {
+Shader_Program::Shader_Program(const std::string& vertex_source, const std::string& fragment_source) {
 	GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-	const char* vertex_source_c = vertexSource.c_str();
-	const char* fragment_source_c = fragmentSource.c_str();
+	const char* vertex_source_c = vertex_source.c_str();
+	const char* fragment_source_c = fragment_source.c_str();
 
 	glShaderSource(vertex_shader, 1, &vertex_source_c, nullptr);
 	glCompileShader(vertex_shader);
@@ -39,9 +39,9 @@ Shader_Program::Shader_Program(const std::string& vertexSource, const std::strin
 	glAttachShader(id, vertex_shader);
 	glAttachShader(id, fragment_shader);
 	glLinkProgram(id);
-	GLint id_link_success;
-	glGetProgramiv(id, GL_COMPILE_STATUS, &id_link_success);
-	if (!id_link_success) {
+	GLint program_link_success;
+	glGetProgramiv(id, GL_LINK_STATUS, &program_link_success);
+	if (!program_link_success) {
 		GLchar info_log[512];
 		glGetProgramInfoLog(id, 512, nullptr, info_log);
 		std::cout << "ERROR::SHADER::PROGRAM::CREATION_FAILED\n" << info_log << std::endl;
