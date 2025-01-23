@@ -74,6 +74,12 @@ void Shader_Program::set_float(const std::string& name, GLfloat value) const {
 	glUniform1f(location, value);
 }
 
+void Shader_Program::set_vec3(const std::string& name, const glm::vec3& value) const {
+	GLint location = glGetUniformLocation(id, name.c_str());
+	assert(location != -1);
+	glUniform3f(location, value.x, value.y, value.z);
+}
+
 void Shader_Program::set_mat4(const std::string& name, const glm::mat4& value) const {
 	GLint location = glGetUniformLocation(id, name.c_str());
 	assert(location != -1);
