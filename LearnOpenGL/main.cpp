@@ -209,25 +209,26 @@ int main() {
 
 		object_shader.set_vec3("viewPos", camera.pos);
 
-		object_shader.set_vec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
-		object_shader.set_vec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
-		object_shader.set_vec3("material.specular",glm::vec3(0.5f, 0.5f, 0.5f));
-		object_shader.set_float("material.shininess", 32.0f);
+		// turquoise
+		object_shader.set_vec3("material.ambient", glm::vec3(0.1f, 0.18725f, 0.1745f));
+		object_shader.set_vec3("material.diffuse", glm::vec3(0.396f, 0.74151f, 0.69102f));
+		object_shader.set_vec3("material.specular",glm::vec3(0.297254f, 0.30829f, 0.306678f));
+		object_shader.set_float("material.shininess", 0.1f * 128.0f);
 
 		object_shader.set_vec3("light.position", light_pos);
 
-		auto light_color = glm::vec3(
-			sin(glfwGetTime() * 2.0f),
-			sin(glfwGetTime() * 0.7f),
-			sin(glfwGetTime() * 1.3f)
-		);
+		//auto light_color = glm::vec3(
+		//	sin(glfwGetTime() * 2.0f),
+		//	sin(glfwGetTime() * 0.7f),
+		//	sin(glfwGetTime() * 1.3f)
+		//);
+		
+		//glm::vec3 diffuse_color = light_color * glm::vec3(0.5f);
+		//glm::vec3 ambient_color = diffuse_color * glm::vec3(0.2f);
 
-		glm::vec3 diffuse_color = light_color * glm::vec3(0.5f);
-		glm::vec3 ambient_color = diffuse_color * glm::vec3(0.2f);
-
-		object_shader.set_vec3("light.ambient", ambient_color);
-		object_shader.set_vec3("light.diffuse", diffuse_color);
-		object_shader.set_vec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		object_shader.set_vec3("light.ambient", glm::vec3(1.0f));
+		object_shader.set_vec3("light.diffuse", glm::vec3(1.0f));
+		object_shader.set_vec3("light.specular", glm::vec3(1.0f));
 		
 		glBindVertexArray(object_vao);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -241,6 +242,8 @@ int main() {
 		light_shader.set_mat4("model", model);
 		light_shader.set_mat4("view", view);
 		light_shader.set_mat4("projection", projection);
+		
+		light_shader.set_vec3("lightColor", glm::vec3(1.0f));
 
 		glBindVertexArray(light_vao);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
