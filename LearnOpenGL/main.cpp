@@ -26,6 +26,22 @@ static auto camera = Camera(
 	glm::vec3(0.0f, 1.0f, 0.0f)
 );
 
+static void glfw_error_callback(int error_code, const char* description) {
+	std::cerr << "ERROR::GLFW\n"
+		<< "ERROR CODE: " << error_code << "\n"
+		<< "DESCRIPTION: " << description << "\n"
+		<< std::endl;
+}
+
+static void GLAPIENTRY opengl_error_callback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* message, const void* userParam) {
+	std::cerr << "ERROR::OPENGL" << std::endl;
+	std::cerr << "SOURCE: " << source << std::endl;
+	std::cerr << "TYPE: " << type << std::endl;
+	std::cerr << "ID: " << id << std::endl;
+	std::cerr << "SEVERITY: " << severity << std::endl;
+	std::cerr << "MESSAGE: " << message << std::endl;
+}
+
 static void framebuffer_size_callback(GLFWwindow* window, int32_t width, int32_t height) {
 	glViewport(0, 0, width, height);
 }
@@ -39,7 +55,7 @@ static void process_input(GLFWwindow* window, float delta_time) {
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
 		input_direction.y += 1.0f;
 	}
-	
+
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
 		input_direction.y -= 1.0f;
 	}
@@ -71,8 +87,17 @@ int main() {
 #pragma region init
 	stbi_set_flip_vertically_on_load(true);
 
-	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	if (!glfwInit()) {
+		std::cerr << "failed to initialize GLFW" << std::endl;
+		return -1;
+	}
+
+	if constexpr (constants::DEBUG) {
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+	}
+	else {
+		glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	}
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
@@ -82,7 +107,7 @@ int main() {
 
 	GLFWwindow* window = glfwCreateWindow(constants::WINDOW_WIDTH, constants::WINDOW_HEIGHT, "Learning OpenGL", nullptr, nullptr);
 	if (window == nullptr) {
-		std::cout << "failed to create GLFW window" << std::endl;
+		std::cerr << "failed to create GLFW window" << std::endl;
 		glfwTerminate();
 		return -1;
 	}
@@ -95,6 +120,14 @@ int main() {
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
 		std::cout << "failed to initialize GLAD" << std::endl;
 		return -1;
+	}
+
+	if constexpr (constants::DEBUG) {
+		glfwSetErrorCallback(glfw_error_callback);
+
+		glEnable(GL_DEBUG_OUTPUT);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS); // Ensures callback messages are synchronized
+		glDebugMessageCallback(opengl_error_callback, nullptr);
 	}
 
 	glEnable(GL_DEPTH_TEST);
@@ -164,7 +197,7 @@ int main() {
 
 	GLuint object_vao;
 	glGenVertexArrays(1, &object_vao);
-	
+
 	GLuint light_vao;
 	glGenVertexArrays(1, &light_vao);
 
@@ -178,7 +211,7 @@ int main() {
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
 	glEnableVertexAttribArray(1);
-	
+
 	glBindVertexArray(light_vao);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)0);
 	glEnableVertexAttribArray(0);
@@ -201,7 +234,7 @@ int main() {
 		glm::mat4 projection = camera.calculate_projection_matrix();
 
 		object_shader.use();
-		
+
 		glm::mat4 model = glm::mat4(1.0f);
 		object_shader.set_mat4("model", model);
 		object_shader.set_mat4("view", view);
@@ -211,7 +244,7 @@ int main() {
 
 		object_shader.set_vec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
 		object_shader.set_vec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
-		object_shader.set_vec3("material.specular",glm::vec3(0.5f, 0.5f, 0.5f));
+		object_shader.set_vec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
 		object_shader.set_float("material.shininess", 32.0f);
 
 		object_shader.set_vec3("light.position", light_pos);
@@ -228,12 +261,12 @@ int main() {
 		object_shader.set_vec3("light.ambient", ambient_color);
 		object_shader.set_vec3("light.diffuse", diffuse_color);
 		object_shader.set_vec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-		
+
 		glBindVertexArray(object_vao);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		light_shader.use();
-		
+
 		model = glm::mat4(1.0f);
 		model = glm::translate(model, light_pos);
 		model = glm::scale(model, glm::vec3(0.2f));

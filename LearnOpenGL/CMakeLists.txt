@@ -11,11 +11,18 @@ target_link_libraries(LearnOpenGL
     PRIVATE glm
 )
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(DEBUG true)
+else()
+    set(DEBUG false)
+endif()
+
 configure_file(
     "${PROJECT_SOURCE_DIR}/LearnOpenGL/config.h.in"
     "${PROJECT_BINARY_DIR}/LearnOpenGL/config.h"
+    @ONLY
 )
-target_include_directories(LearnOpenGL PRIVATE ${PROJECT_BINARY_DIR}/LearnOpenGL)
+target_include_directories(LearnOpenGL PRIVATE "${PROJECT_BINARY_DIR}/LearnOpenGL")
 
 if(WIN32)
     set_target_properties(
