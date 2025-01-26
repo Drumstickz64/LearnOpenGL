@@ -6,9 +6,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -17,6 +14,9 @@
 #include "fs_util.h"
 #include "shader_program.h"
 #include "camera.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 static auto light_pos = glm::vec3(1.2f, 1.0f, 2.0f);
 
@@ -147,41 +147,8 @@ int main() {
 #pragma endregion
 
 #pragma region textures
-	std::filesystem::path diffuse_map_path = constants::ASSET_PATH / "container2.png";
-	int diffuse_map_width, diffuse_map_height, diffuse_map_num_chans;
-	stbi_uc* diffuse_map_data = stbi_load(diffuse_map_path.string().c_str(), &diffuse_map_width, &diffuse_map_height, &diffuse_map_num_chans, 0);
-
-	GLuint diffuse_map_texture;
-	glGenTextures(1, &diffuse_map_texture);
-	glBindTexture(GL_TEXTURE_2D, diffuse_map_texture);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, diffuse_map_width, diffuse_map_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, diffuse_map_data);
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	stbi_image_free(diffuse_map_data);
-	
-	std::filesystem::path specular_map_path = constants::ASSET_PATH / "container2_specular.png";
-	int specular_map_width, specular_map_height, specular_map_num_chans;
-	stbi_uc* specular_map_data = stbi_load(specular_map_path.string().c_str(), &specular_map_width, &specular_map_height, &specular_map_num_chans, 0);
-
-	GLuint specular_map_texture;
-	glGenTextures(1, &specular_map_texture);
-	glBindTexture(GL_TEXTURE_2D, specular_map_texture);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, specular_map_width, specular_map_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, specular_map_data);
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	stbi_image_free(specular_map_data);
+	auto diffuse_map_texture = Texture(constants::ASSET_PATH / "container2.png");
+	auto specular_map_texture = Texture(constants::ASSET_PATH / "container2_specular.png");
 #pragma endregion
 
 #pragma region static_data
@@ -279,12 +246,8 @@ int main() {
 
 		object_shader.set_vec3("viewPos", camera.pos);
 
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, diffuse_map_texture);
-		object_shader.set_int("material.diffuse", 0);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, specular_map_texture);
-		object_shader.set_int("material.specular", 1);
+		object_shader.set_texture("material.diffuse", diffuse_map_texture, 0);
+		object_shader.set_texture("material.specular", specular_map_texture, 1);
 		object_shader.set_float("material.shininess", 64.0f);
 
 		object_shader.set_vec3("light.position", light_pos);

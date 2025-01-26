@@ -85,3 +85,8 @@ void Shader_Program::set_mat4(const std::string& name, const glm::mat4& value) c
 	assert(location != -1);
 	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
 }
+
+void Shader_Program::set_texture(const std::string& name, const Texture& value, GLenum slot) const {
+	value.bind(slot);
+	set_int(name, slot);
+}
