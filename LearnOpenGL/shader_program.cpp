@@ -1,7 +1,6 @@
 #include <string>
 #include <cstdlib>
 #include <iostream>
-#include <cassert>
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -57,36 +56,42 @@ void Shader_Program::use() const {
 }
 
 void Shader_Program::set_bool(const std::string& name, bool value) const {
-	GLint location = glGetUniformLocation(id, name.c_str());
-	assert(location != -1);
+	GLint location = get_uniform_location(name);
 	glUniform1i(location, (GLint)value);
 }
 
 void Shader_Program::set_int(const std::string& name, GLint value) const {
-	GLint location = glGetUniformLocation(id, name.c_str());
-	assert(location != -1);
+	GLint location = get_uniform_location(name);
 	glUniform1i(location, value);
 }
 
 void Shader_Program::set_float(const std::string& name, GLfloat value) const {
-	GLint location = glGetUniformLocation(id, name.c_str());
-	assert(location != -1);
+	GLint location = get_uniform_location(name);
 	glUniform1f(location, value);
 }
 
 void Shader_Program::set_vec3(const std::string& name, const glm::vec3& value) const {
-	GLint location = glGetUniformLocation(id, name.c_str());
-	assert(location != -1);
+	GLint location = get_uniform_location(name);
 	glUniform3f(location, value.x, value.y, value.z);
 }
 
 void Shader_Program::set_mat4(const std::string& name, const glm::mat4& value) const {
-	GLint location = glGetUniformLocation(id, name.c_str());
-	assert(location != -1);
+	GLint location = get_uniform_location(name);
 	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
 }
 
 void Shader_Program::set_texture(const std::string& name, const Texture& value, GLenum slot) const {
 	value.bind(slot);
 	set_int(name, slot);
+}
+
+GLint Shader_Program::get_uniform_location(const std::string& name) const
+{
+	GLint location = glGetUniformLocation(id, name.c_str());
+	if (location == -1) {
+		std::cerr << "ERROR::SHADER\n" << "uniform '" << name << "' does not exist";
+		exit(-1);
+	}
+
+	return location;
 }

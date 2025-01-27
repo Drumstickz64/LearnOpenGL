@@ -23,4 +23,7 @@ public:
 	void set_vec3(const std::string& name, const glm::vec3& value) const;
 	void set_mat4(const std::string& name, const glm::mat4& value) const;
 	void set_texture(const std::string& name, const Texture& value, GLenum slot) const;
+
+private:
+	GLint get_uniform_location(const std::string& name) const;
 };
