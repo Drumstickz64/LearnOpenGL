@@ -1,4 +1,4 @@
-#include <string>
+#include <string_view>
 #include <cstdlib>
 #include <iostream>
 
@@ -6,10 +6,10 @@
 
 #include "shader_program.h"
 
-Shader_Program::Shader_Program(const std::string& vertex_source, const std::string& fragment_source) {
+Shader_Program::Shader_Program(std::string_view vertex_source, std::string_view fragment_source) {
 	GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-	const char* vertex_source_c = vertex_source.c_str();
-	const char* fragment_source_c = fragment_source.c_str();
+	const char* vertex_source_c = vertex_source.data();
+	const char* fragment_source_c = fragment_source.data();
 
 	glShaderSource(vertex_shader, 1, &vertex_source_c, nullptr);
 	glCompileShader(vertex_shader);
@@ -55,39 +55,39 @@ void Shader_Program::use() const {
 	glUseProgram(id);
 }
 
-void Shader_Program::set_bool(const std::string& name, bool value) const {
+void Shader_Program::set_bool(std::string_view name, bool value) const {
 	GLint location = get_uniform_location(name);
 	glUniform1i(location, (GLint)value);
 }
 
-void Shader_Program::set_int(const std::string& name, GLint value) const {
+void Shader_Program::set_int(std::string_view name, GLint value) const {
 	GLint location = get_uniform_location(name);
 	glUniform1i(location, value);
 }
 
-void Shader_Program::set_float(const std::string& name, GLfloat value) const {
+void Shader_Program::set_float(std::string_view name, GLfloat value) const {
 	GLint location = get_uniform_location(name);
 	glUniform1f(location, value);
 }
 
-void Shader_Program::set_vec3(const std::string& name, const glm::vec3& value) const {
+void Shader_Program::set_vec3(std::string_view name, const glm::vec3& value) const {
 	GLint location = get_uniform_location(name);
 	glUniform3f(location, value.x, value.y, value.z);
 }
 
-void Shader_Program::set_mat4(const std::string& name, const glm::mat4& value) const {
+void Shader_Program::set_mat4(std::string_view name, const glm::mat4& value) const {
 	GLint location = get_uniform_location(name);
 	glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
 }
 
-void Shader_Program::set_texture(const std::string& name, const Texture& value, GLenum slot) const {
+void Shader_Program::set_texture(std::string_view name, const Texture& value, GLenum slot) const {
 	value.bind(slot);
 	set_int(name, slot);
 }
 
-GLint Shader_Program::get_uniform_location(const std::string& name) const
+GLint Shader_Program::get_uniform_location(std::string_view name) const
 {
-	GLint location = glGetUniformLocation(id, name.c_str());
+	GLint location = glGetUniformLocation(id, name.data());
 	if (location == -1) {
 		std::cerr << "ERROR::SHADER\n" << "uniform '" << name << "' does not exist";
 		exit(-1);
