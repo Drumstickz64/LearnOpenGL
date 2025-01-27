@@ -18,7 +18,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-static auto light_pos = glm::vec3(1.2f, 1.0f, 2.0f);
+static auto light_dir = glm::vec3(-0.2f, -1.0f, -0.3f);
 
 static auto camera = Camera(
 	glm::vec3(0.0f, 0.0f, 3.0f),
@@ -197,6 +197,19 @@ int main() {
 		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 	};
 
+	glm::vec3 cubePositions[] = {
+		glm::vec3(0.0f,  0.0f,  0.0f),
+		glm::vec3(2.0f,  5.0f, -15.0f),
+		glm::vec3(-1.5f, -2.2f, -2.5f),
+		glm::vec3(-3.8f, -2.0f, -12.3f),
+		glm::vec3(2.4f, -0.4f, -3.5f),
+		glm::vec3(-1.7f,  3.0f, -7.5f),
+		glm::vec3(1.3f, -2.0f, -2.5f),
+		glm::vec3(1.5f,  2.0f, -2.5f),
+		glm::vec3(1.5f,  0.2f, -1.5f),
+		glm::vec3(-1.3f,  1.0f, -1.5f)
+	};
+
 	GLuint object_vao;
 	glGenVertexArrays(1, &object_vao);
 
@@ -250,26 +263,22 @@ int main() {
 		object_shader.set_texture("material.specular", specular_map_texture, 1);
 		object_shader.set_float("material.shininess", 64.0f);
 
-		object_shader.set_vec3("light.position", light_pos);
+		object_shader.set_vec3("light.direction", light_dir);
 		object_shader.set_vec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
 		object_shader.set_vec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
 		object_shader.set_vec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
 		glBindVertexArray(object_vao);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		for (size_t i = 0; i < 10; i++) {
+			// calculate the model matrix for each object and pass it to shader before drawing
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, cubePositions[i]);
+			float angle = 20.0f * i;
+			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+			object_shader.set_mat4("model", model);
 
-		light_shader.use();
-
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, light_pos);
-		model = glm::scale(model, glm::vec3(0.2f));
-
-		light_shader.set_mat4("model", model);
-		light_shader.set_mat4("view", view);
-		light_shader.set_mat4("projection", projection);
-
-		glBindVertexArray(light_vao);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+			glDrawArrays(GL_TRIANGLES, 0, 36);
+		}
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
