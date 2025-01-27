@@ -18,7 +18,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-static auto light_dir = glm::vec3(-0.2f, -1.0f, -0.3f);
+static auto light_pos = glm::vec3(1.2f, 1.0f, 2.0f);
 
 static auto camera = Camera(
 	glm::vec3(0.0f, 0.0f, 3.0f),
@@ -263,10 +263,13 @@ int main() {
 		object_shader.set_texture("material.specular", specular_map_texture, 1);
 		object_shader.set_float("material.shininess", 64.0f);
 
-		object_shader.set_vec3("light.direction", light_dir);
+		object_shader.set_vec3("light.position", light_pos);
 		object_shader.set_vec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
 		object_shader.set_vec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
 		object_shader.set_vec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		object_shader.set_float("light.constant", 1.0f);
+		object_shader.set_float("light.linear", 0.09f);
+		object_shader.set_float("light.quadratic", 0.032f);
 
 		glBindVertexArray(object_vao);
 		for (size_t i = 0; i < 10; i++) {
@@ -279,6 +282,19 @@ int main() {
 
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
+
+		light_shader.use();
+
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, light_pos);
+		model = glm::scale(model, glm::vec3(0.2f));
+
+		light_shader.set_mat4("model", model);
+		light_shader.set_mat4("view", view);
+		light_shader.set_mat4("projection", projection);
+
+		glBindVertexArray(light_vao);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
