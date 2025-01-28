@@ -8,6 +8,10 @@ struct Material {
 
 struct Light {
 	vec3 position;
+	vec3 direction;
+	// cos of angles
+	float cutoff;
+	float outerCutoff;
 
 	vec3 ambient;
 	vec3 diffuse;
@@ -42,15 +46,21 @@ void main() {
 
 	float spec = pow(max(dot(reflectDir, viewDir), 0.0), material.shininess);
 	vec3 specular = light.specular * spec * vec3(texture(material.specular, TexCoord));
+	
+	vec3 spotDir = normalize(-light.direction);
+	float cosTheta = dot(lightDir, spotDir);
+	float epsilon = light.cutoff - light.outerCutoff;
+	float intensity = clamp((cosTheta - light.outerCutoff) / epsilon, 0.0, 1.0);
 
 	float distanceToLight = distance(light.position, FragPos);
 	float attinuation =
 		1.0 / (light.constant + light.linear * distanceToLight + light.quadratic * distanceToLight * distanceToLight);
 
-	ambient *= attinuation;
-	diffuse *= attinuation;
-	specular *= attinuation;
+	ambient *= attinuation * intensity;
+	diffuse *= attinuation * intensity;
+	specular *= attinuation * intensity;
 
 	vec3 result = ambient + diffuse + specular;
+
 	FragColor = vec4(result, 1.0);
 }
