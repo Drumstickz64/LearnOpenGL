@@ -9,6 +9,7 @@ target_link_libraries(LearnOpenGL
     PRIVATE glfw
     PRIVATE stb_image
     PRIVATE glm
+    PRIVATE assimp
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -30,6 +31,9 @@ if(WIN32)
         PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE"
                    LINK_FLAGS_RELEASE "/SUBSYSTEM:WINDOWS /ENTRY:mainCRTStartup"
     )
+
+    add_custom_command(TARGET LearnOpenGL PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory_if_different "${CMAKE_SOURCE_DIR}/dlls" $<TARGET_FILE_DIR:LearnOpenGL>)
+
 endif()
 
 # TODO: Add tests and install targets if needed.

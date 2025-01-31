@@ -20,6 +20,12 @@ add_subdirectory(LearnOpenGL)
 add_library(glm INTERFACE)
 target_include_directories(glm INTERFACE "deps/glm")
 
+find_package(assimp CONFIG)
+
+if (NOT assimp_FOUND)
+  add_subdirectory("deps/assimp")
+endif()
+
 if(CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET LearnOpenGL PROPERTY CXX_STANDARD 20)
 endif()
