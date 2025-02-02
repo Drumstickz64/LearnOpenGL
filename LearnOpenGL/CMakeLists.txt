@@ -2,7 +2,7 @@
 # project specific logic here.
 
 # Add source to this project's executable.
-add_executable(LearnOpenGL "main.cpp" "shader_program.cpp" "shader_program.h" "fs_util.h" "fs_util.cpp" "camera.cpp" "camera.h"  "texture.h" "texture.cpp")
+add_executable(LearnOpenGL "main.cpp" "shader_program.cpp" "shader_program.h" "fs_util.h" "fs_util.cpp" "camera.cpp" "camera.h"  "texture.h" "texture.cpp" "model.h" "model.cpp")
 
 target_link_libraries(LearnOpenGL
     PRIVATE glad
@@ -11,12 +11,6 @@ target_link_libraries(LearnOpenGL
     PRIVATE glm
     PRIVATE assimp
 )
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(DEBUG true)
-else()
-    set(DEBUG false)
-endif()
 
 configure_file(
     "${PROJECT_SOURCE_DIR}/LearnOpenGL/config.h.in"

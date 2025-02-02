@@ -8,7 +8,7 @@
 #include "texture.h"
 
 class Shader_Program {
-public:
+   public:
 	// the program ID
 	GLuint id;
 
@@ -24,6 +24,6 @@ public:
 	void set_mat4(std::string_view name, const glm::mat4& value) const;
 	void set_texture(std::string_view name, const Texture& value, GLenum slot) const;
 
-private:
+   private:
 	GLint get_uniform_location(std::string_view name) const;
 };

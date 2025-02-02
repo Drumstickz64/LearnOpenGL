@@ -5,7 +5,7 @@
 #include "config.h"
 
 class Camera {
-public:
+   public:
 	glm::vec3 pos;
 	glm::vec3 front;
 	glm::vec3 up;
@@ -23,7 +23,7 @@ public:
 
 	void change_zoom(float scroll_y_offset);
 
-private:
+   private:
 	float m_yaw = -90.0f;
 	float m_pitch = 0.0f;
 	float m_last_mouse_x = constants::WINDOW_WIDTH / 2.0f;

@@ -1,6 +1,6 @@
-#include <string_view>
 #include <cstdlib>
 #include <iostream>
+#include <string_view>
 
 #include <glm/gtc/type_ptr.hpp>
 
@@ -83,10 +83,10 @@ void Shader_Program::set_mat4(std::string_view name, const glm::mat4& value) con
 void Shader_Program::set_texture(std::string_view name, const Texture& value, GLenum slot) const {
 	value.bind(slot);
 	set_int(name, slot);
+	glActiveTexture(GL_TEXTURE0);
 }
 
-GLint Shader_Program::get_uniform_location(std::string_view name) const
-{
+GLint Shader_Program::get_uniform_location(std::string_view name) const {
 	GLint location = glGetUniformLocation(id, name.data());
 	if (location == -1) {
 		std::cerr << "ERROR::SHADER\n" << "uniform '" << name << "' does not exist";
