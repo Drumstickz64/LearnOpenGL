@@ -129,6 +129,7 @@ int main() {
 	}
 
 	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
 
 	glViewport(0, 0, constants::WINDOW_WIDTH, constants::WINDOW_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -140,9 +141,65 @@ int main() {
 	Shader_Program object_shader = Shader_Program(object_vertex_shader, object_fragment_shader);
 #pragma endregion
 
-#pragma region model
-	stbi_set_flip_vertically_on_load(true);
-	auto backpack_model = Model(constants::ASSET_PATH / "backpack_model" / "backpack.obj");
+#pragma region textures
+	Texture cube_texture = Texture(constants::ASSET_PATH / "marble.jpg", "texture_diffuse");
+	Texture floor_texture = Texture(constants::ASSET_PATH / "metal.png", "texture_diffuse");
+#pragma endregion
+
+#pragma region static_data
+	float cube_vertices[] = {
+		// positions          // texture Coords
+		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,	-0.5f, -0.5f, 1.0f, 0.0f, 0.5f,	 0.5f,	-0.5f, 1.0f, 1.0f,
+		0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+
+		-0.5f, -0.5f, 0.5f,	 0.0f, 0.0f, 0.5f,	-0.5f, 0.5f,  1.0f, 0.0f, 0.5f,	 0.5f,	0.5f,  1.0f, 1.0f,
+		0.5f,  0.5f,  0.5f,	 1.0f, 1.0f, -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,
+
+		-0.5f, 0.5f,  0.5f,	 1.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, 0.5f,	0.5f,  1.0f, 0.0f,
+
+		0.5f,  0.5f,  0.5f,	 1.0f, 0.0f, 0.5f,	0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,	 -0.5f, -0.5f, 0.0f, 1.0f,
+		0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,	-0.5f, 0.5f,  0.0f, 0.0f, 0.5f,	 0.5f,	0.5f,  1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,	-0.5f, -0.5f, 1.0f, 1.0f, 0.5f,	 -0.5f, 0.5f,  1.0f, 0.0f,
+		0.5f,  -0.5f, 0.5f,	 1.0f, 0.0f, -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+
+		-0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f,	0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,	 0.5f,	0.5f,  1.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,	 1.0f, 0.0f, -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,	-0.5f, 0.0f, 1.0f};
+
+	float plane_vertices[] = {
+		// positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture
+		// wrapping mode). this will cause the floor texture to repeat)
+		5.0f, -0.5f, 5.0f, 2.0f, 0.0f, -5.0f, -0.5f, 5.0f,	0.0f, 0.0f, -5.0f, -0.5f, -5.0f, 0.0f, 2.0f,
+
+		5.0f, -0.5f, 5.0f, 2.0f, 0.0f, -5.0f, -0.5f, -5.0f, 0.0f, 2.0f, 5.0f,  -0.5f, -5.0f, 2.0f, 2.0f};
+
+	// cube VAO
+	unsigned int cube_vao, cube_vbo;
+	glGenVertexArrays(1, &cube_vao);
+	glGenBuffers(1, &cube_vbo);
+	glBindVertexArray(cube_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, cube_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(cube_vertices), &cube_vertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glBindVertexArray(0);
+	// plane _vao
+	unsigned int plane_vao, plane_vbo;
+	glGenVertexArrays(1, &plane_vao);
+	glGenBuffers(1, &plane_vbo);
+	glBindVertexArray(plane_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, plane_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(plane_vertices), &plane_vertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glBindVertexArray(0);
+
+	object_shader.use();
 #pragma endregion
 
 #pragma region loop
@@ -160,16 +217,32 @@ int main() {
 
 		object_shader.use();
 
+		object_shader.use();
+		glm::mat4 model = glm::mat4(1.0f);
 		glm::mat4 view = camera.calculate_view_matrix();
-		object_shader.set_mat4("view", view);
 		glm::mat4 projection = camera.calculate_projection_matrix();
-		object_shader.set_mat4("projection", projection);
 
-        glm::mat4 model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));	 // translate it down so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	 // it's a bit too big for our scene, so scale it down
+		object_shader.set_mat4("view", view);
+		object_shader.set_mat4("projection", projection);
+		// cubes
+		// cube 1
+		glBindVertexArray(cube_vao);
+		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
 		object_shader.set_mat4("model", model);
-		backpack_model.draw(object_shader);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		// cube 2
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+		object_shader.set_mat4("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		// floor
+		glBindVertexArray(plane_vao);
+		object_shader.set_mat4("model", glm::mat4(1.0f));
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		glBindVertexArray(0);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
