@@ -129,7 +129,8 @@ int main() {
 	}
 
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
+	glEnable(GL_STENCIL_TEST);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 	glViewport(0, 0, constants::WINDOW_WIDTH, constants::WINDOW_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -138,7 +139,9 @@ int main() {
 #pragma region shader
 	std::string object_vertex_shader = fs_util::read_file(constants::SHADER_PATH / "object.vert");
 	std::string object_fragment_shader = fs_util::read_file(constants::SHADER_PATH / "object.frag");
+	std::string solid_color_fragment_shader = fs_util::read_file(constants::SHADER_PATH / "solid_color.frag");
 	Shader_Program object_shader = Shader_Program(object_vertex_shader, object_fragment_shader);
+	Shader_Program solid_color_shader = Shader_Program(object_vertex_shader, solid_color_fragment_shader);
 #pragma endregion
 
 #pragma region textures
@@ -213,20 +216,34 @@ int main() {
 		process_input(window, delta_time);
 
 		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-		object_shader.use();
-
-		object_shader.use();
-		glm::mat4 model = glm::mat4(1.0f);
 		glm::mat4 view = camera.calculate_view_matrix();
 		glm::mat4 projection = camera.calculate_projection_matrix();
 
+		object_shader.use();
 		object_shader.set_mat4("view", view);
 		object_shader.set_mat4("projection", projection);
+
+		solid_color_shader.use();
+		solid_color_shader.set_mat4("view", view);
+		solid_color_shader.set_mat4("projection", projection);
+
+		object_shader.use();
+		// floor
+		glStencilMask(0x00);
+		glBindVertexArray(plane_vao);
+		object_shader.set_texture("texture1", floor_texture, 0);
+		object_shader.set_mat4("model", glm::mat4(1.0f));
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
 		// cubes
+		object_shader.set_texture("texture1", cube_texture, 0);
+		glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		glStencilMask(0xFF);
 		// cube 1
 		glBindVertexArray(cube_vao);
+		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
 		object_shader.set_mat4("model", model);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -236,11 +253,29 @@ int main() {
 		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
 		object_shader.set_mat4("model", model);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+		
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
+		glDisable(GL_DEPTH_TEST);
+		solid_color_shader.use();
+		// cube 1 border
+		glBindVertexArray(cube_vao);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+		model = glm::scale(model, glm::vec3(1.1f));
+		solid_color_shader.set_mat4("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		// floor
-		glBindVertexArray(plane_vao);
-		object_shader.set_mat4("model", glm::mat4(1.0f));
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		// cube 2 border
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+		model = glm::scale(model, glm::vec3(1.1f));
+		solid_color_shader.set_mat4("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		glStencilMask(0xFF);
+		glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		glEnable(GL_DEPTH_TEST);
 
 		glBindVertexArray(0);
 
