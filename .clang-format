@@ -12,5 +12,6 @@ SpaceAfterCStyleCast: false
 SpacesInParentheses: false
 SpacesInAngles:  false
 SpacesInSquareBrackets: false
-ReflowComments: true
+ReflowComments: true 
+SortIncludes: false
 ---

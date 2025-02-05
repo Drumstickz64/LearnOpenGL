@@ -17,6 +17,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
+#include <map>
 
 static auto camera = Camera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -129,6 +130,8 @@ int main() {
 	}
 
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glViewport(0, 0, constants::WINDOW_WIDTH, constants::WINDOW_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -141,10 +144,9 @@ int main() {
 #pragma endregion
 
 #pragma region textures
-	Texture cube_texture = Texture(constants::ASSET_PATH / "marble.jpg", "texture_diffuse");
-	Texture floor_texture = Texture(constants::ASSET_PATH / "metal.png", "texture_diffuse");
-	Texture grass_texture =
-		Texture(constants::ASSET_PATH / "grass.png", "texture_diffuse", GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
+	Texture cube_texture = Texture(constants::ASSET_PATH / "textures" / "marble.jpg", "texture_diffuse");
+	Texture floor_texture = Texture(constants::ASSET_PATH / "textures" / "metal.png", "texture_diffuse");
+	Texture window_texture = Texture(constants::ASSET_PATH / "textures" / "window.png", "texture_diffuse");
 #pragma endregion
 
 #pragma region static_data
@@ -217,9 +219,9 @@ int main() {
     };
 	// clang-format on
 
-	std::vector<glm::vec3> vegetation = {glm::vec3(-1.5f, 0.0f, -0.48f), glm::vec3(1.5f, 0.0f, 0.51f),
-										 glm::vec3(0.0f, 0.0f, 0.7f), glm::vec3(-0.3f, 0.0f, -2.3f),
-										 glm::vec3(0.5f, 0.0f, -0.6f)};
+	std::vector<glm::vec3> windows{glm::vec3(-1.5f, 0.0f, -0.48f), glm::vec3(1.5f, 0.0f, 0.51f),
+								   glm::vec3(0.0f, 0.0f, 0.7f), glm::vec3(-0.3f, 0.0f, -2.3f),
+								   glm::vec3(0.5f, 0.0f, -0.6f)};
 
 	// cube VAO
 	unsigned int cube_vao, cube_vbo;
@@ -258,6 +260,8 @@ int main() {
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
 	glBindVertexArray(0);
+
+	std::map<float, glm::vec3> sorted_windows;
 #pragma endregion
 
 #pragma region loop
@@ -267,6 +271,8 @@ int main() {
 		float time = static_cast<float>(glfwGetTime());
 		float delta_time = time - last_frame;
 		last_frame = time;
+
+		sorted_windows.clear();
 
 		process_input(window, delta_time);
 
@@ -301,13 +307,18 @@ int main() {
 		object_shader.set_mat4("model", model);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		// grass
+		// windows
 		glBindVertexArray(transparent_vao);
-		object_shader.set_texture("texture1", grass_texture, 0);
+		object_shader.set_texture("texture1", window_texture, 0);
 
-		for (glm::vec3 grass_pos : vegetation) {
+		for (glm::vec3 window_pos : windows) {
+			float distance = glm::distance(camera.pos, window_pos);
+			sorted_windows[distance] = window_pos;
+		}
+
+		for (auto it = sorted_windows.rbegin(); it != sorted_windows.rend(); it++) {
 			model = glm::mat4(1.0f);
-			model = glm::translate(model, grass_pos);
+			model = glm::translate(model, it->second);
 			object_shader.set_mat4("model", model);
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
