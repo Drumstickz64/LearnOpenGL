@@ -5,7 +5,7 @@
 
 static std::unordered_map<std::filesystem::path, Texture> textures_loaded;
 
-Texture::Texture(std::filesystem::path image_path, std::string type) : type(type) {
+Texture::Texture(std::filesystem::path image_path, std::string type, GLenum wrap_s, GLenum wrap_t) : type(type) {
 	if (textures_loaded.contains(image_path)) {
 		*this = textures_loaded[image_path];
 		return;
@@ -20,8 +20,8 @@ Texture::Texture(std::filesystem::path image_path, std::string type) : type(type
 	glGenTextures(1, &id);
 	glBindTexture(GL_TEXTURE_2D, id);
 
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_s);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_t);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 

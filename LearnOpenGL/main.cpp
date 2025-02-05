@@ -1,13 +1,13 @@
-﻿#include <cmath>
-#include <cstdint>
-#include <iostream>
-#include <string>
-
-#include <glad/glad.h>
+﻿#include <glad/glad.h>
 #include <GLFW/glfw3.h>
+
+#include <cmath>
+#include <cstdint>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
+#include <string>
 
 #include "camera.h"
 #include "config.h"
@@ -129,8 +129,6 @@ int main() {
 	}
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_STENCIL_TEST);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
 	glViewport(0, 0, constants::WINDOW_WIDTH, constants::WINDOW_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -139,43 +137,89 @@ int main() {
 #pragma region shader
 	std::string object_vertex_shader = fs_util::read_file(constants::SHADER_PATH / "object.vert");
 	std::string object_fragment_shader = fs_util::read_file(constants::SHADER_PATH / "object.frag");
-	std::string solid_color_fragment_shader = fs_util::read_file(constants::SHADER_PATH / "solid_color.frag");
 	Shader_Program object_shader = Shader_Program(object_vertex_shader, object_fragment_shader);
-	Shader_Program solid_color_shader = Shader_Program(object_vertex_shader, solid_color_fragment_shader);
 #pragma endregion
 
 #pragma region textures
 	Texture cube_texture = Texture(constants::ASSET_PATH / "marble.jpg", "texture_diffuse");
 	Texture floor_texture = Texture(constants::ASSET_PATH / "metal.png", "texture_diffuse");
+	Texture grass_texture =
+		Texture(constants::ASSET_PATH / "grass.png", "texture_diffuse", GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
 #pragma endregion
 
 #pragma region static_data
+	// clang-format off
 	float cube_vertices[] = {
 		// positions          // texture Coords
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, 0.5f,	-0.5f, -0.5f, 1.0f, 0.0f, 0.5f,	 0.5f,	-0.5f, 1.0f, 1.0f,
-		0.5f,  0.5f,  -0.5f, 1.0f, 1.0f, -0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 
-		-0.5f, -0.5f, 0.5f,	 0.0f, 0.0f, 0.5f,	-0.5f, 0.5f,  1.0f, 0.0f, 0.5f,	 0.5f,	0.5f,  1.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,	 1.0f, 1.0f, -0.5f, 0.5f,  0.5f,  0.0f, 1.0f, -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
 
-		-0.5f, 0.5f,  0.5f,	 1.0f, 0.0f, -0.5f, 0.5f,  -0.5f, 1.0f, 1.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, 0.5f,	0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 
-		0.5f,  0.5f,  0.5f,	 1.0f, 0.0f, 0.5f,	0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,	 -0.5f, -0.5f, 0.0f, 1.0f,
-		0.5f,  -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,	-0.5f, 0.5f,  0.0f, 0.0f, 0.5f,	 0.5f,	0.5f,  1.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
 
-		-0.5f, -0.5f, -0.5f, 0.0f, 1.0f, 0.5f,	-0.5f, -0.5f, 1.0f, 1.0f, 0.5f,	 -0.5f, 0.5f,  1.0f, 0.0f,
-		0.5f,  -0.5f, 0.5f,	 1.0f, 0.0f, -0.5f, -0.5f, 0.5f,  0.0f, 0.0f, -0.5f, -0.5f, -0.5f, 0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
 
-		-0.5f, 0.5f,  -0.5f, 0.0f, 1.0f, 0.5f,	0.5f,  -0.5f, 1.0f, 1.0f, 0.5f,	 0.5f,	0.5f,  1.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,	 1.0f, 0.0f, -0.5f, 0.5f,  0.5f,  0.0f, 0.0f, -0.5f, 0.5f,	-0.5f, 0.0f, 1.0f};
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		0.5f,  0.5f,  -0.5f,  1.0f, 1.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f, 0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+	};
 
 	float plane_vertices[] = {
-		// positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture
-		// wrapping mode). this will cause the floor texture to repeat)
-		5.0f, -0.5f, 5.0f, 2.0f, 0.0f, -5.0f, -0.5f, 5.0f,	0.0f, 0.0f, -5.0f, -0.5f, -5.0f, 0.0f, 2.0f,
+		// positions          // texture Coords 
+		5.0f, -0.5f,   5.0f,  2.0f, 0.0f,
+		-5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
 
-		5.0f, -0.5f, 5.0f, 2.0f, 0.0f, -5.0f, -0.5f, -5.0f, 0.0f, 2.0f, 5.0f,  -0.5f, -5.0f, 2.0f, 2.0f};
+		5.0f, -0.5f,   5.0f,   2.0f, 0.0f,
+		-5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+		5.0f, -0.5f,  -5.0f,  2.0f, 2.0f
+	};
+
+	float transparent_vertices[] = {
+        // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+        0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+
+        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+        1.0f,  0.5f,  0.0f,  1.0f,  0.0f
+    };
+	// clang-format on
+
+	std::vector<glm::vec3> vegetation = {glm::vec3(-1.5f, 0.0f, -0.48f), glm::vec3(1.5f, 0.0f, 0.51f),
+										 glm::vec3(0.0f, 0.0f, 0.7f), glm::vec3(-0.3f, 0.0f, -2.3f),
+										 glm::vec3(0.5f, 0.0f, -0.6f)};
 
 	// cube VAO
 	unsigned int cube_vao, cube_vbo;
@@ -189,7 +233,7 @@ int main() {
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glBindVertexArray(0);
-	// plane _vao
+	// plane VAO
 	unsigned int plane_vao, plane_vbo;
 	glGenVertexArrays(1, &plane_vao);
 	glGenBuffers(1, &plane_vbo);
@@ -201,8 +245,19 @@ int main() {
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glBindVertexArray(0);
+	// transparent VAO
+	unsigned int transparent_vao, transparent_vbo;
+	glGenVertexArrays(1, &transparent_vao);
+	glGenBuffers(1, &transparent_vbo);
+	glBindVertexArray(transparent_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, transparent_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(transparent_vertices), &transparent_vertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
-	object_shader.use();
+	glBindVertexArray(0);
 #pragma endregion
 
 #pragma region loop
@@ -216,7 +271,7 @@ int main() {
 		process_input(window, delta_time);
 
 		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glm::mat4 view = camera.calculate_view_matrix();
 		glm::mat4 projection = camera.calculate_projection_matrix();
@@ -225,13 +280,7 @@ int main() {
 		object_shader.set_mat4("view", view);
 		object_shader.set_mat4("projection", projection);
 
-		solid_color_shader.use();
-		solid_color_shader.set_mat4("view", view);
-		solid_color_shader.set_mat4("projection", projection);
-
-		object_shader.use();
 		// floor
-		glStencilMask(0x00);
 		glBindVertexArray(plane_vao);
 		object_shader.set_texture("texture1", floor_texture, 0);
 		object_shader.set_mat4("model", glm::mat4(1.0f));
@@ -239,8 +288,6 @@ int main() {
 
 		// cubes
 		object_shader.set_texture("texture1", cube_texture, 0);
-		glStencilFunc(GL_ALWAYS, 1, 0xFF);
-		glStencilMask(0xFF);
 		// cube 1
 		glBindVertexArray(cube_vao);
 		glm::mat4 model = glm::mat4(1.0f);
@@ -253,29 +300,17 @@ int main() {
 		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
 		object_shader.set_mat4("model", model);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
-		
-		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		glStencilMask(0x00);
-		glDisable(GL_DEPTH_TEST);
-		solid_color_shader.use();
-		// cube 1 border
-		glBindVertexArray(cube_vao);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
-		model = glm::scale(model, glm::vec3(1.1f));
-		solid_color_shader.set_mat4("model", model);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		// cube 2 border
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
-		model = glm::scale(model, glm::vec3(1.1f));
-		solid_color_shader.set_mat4("model", model);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		// grass
+		glBindVertexArray(transparent_vao);
+		object_shader.set_texture("texture1", grass_texture, 0);
 
-		glStencilMask(0xFF);
-		glStencilFunc(GL_ALWAYS, 1, 0xFF);
-		glEnable(GL_DEPTH_TEST);
+		for (glm::vec3 grass_pos : vegetation) {
+			model = glm::mat4(1.0f);
+			model = glm::translate(model, grass_pos);
+			object_shader.set_mat4("model", model);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
+		}
 
 		glBindVertexArray(0);
 
