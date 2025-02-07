@@ -15,6 +15,21 @@ project(LearnOpenGL)
 add_subdirectory(deps/glad)
 add_subdirectory(deps/glfw)
 add_subdirectory(deps/stb_image)
+
+option(DEBUG "enable debug printing and opengl debug messages" OFF)
+option(WIREFRAME_MODE OFF)
+
+if(${DEBUG})
+	set(DEBUG_CPP_VALUE "true")
+else()
+	set(DEBUG_CPP_VALUE "false")
+endif()
+
+if(${WIREFRAME})
+	set(WIREFRAME_CPP_VALUE "true")
+else()
+	set(WIREFRAME_CPP_VALUE "false")
+endif()
 add_subdirectory(LearnOpenGL)
 
 add_library(glm INTERFACE)

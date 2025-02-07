@@ -131,6 +131,10 @@ int main() {
 
 	glEnable(GL_DEPTH_TEST);
 
+	if (constants::WIREFRAME) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	}
+
 	glViewport(0, 0, constants::WINDOW_WIDTH, constants::WINDOW_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 #pragma endregion

@@ -9,5 +9,6 @@ namespace constants {
 	constexpr int32_t WINDOW_WIDTH = 800;
 	constexpr int32_t WINDOW_HEIGHT = 600;
 	constexpr float MOUSE_SENSETIVIY = 0.1f;
-	constexpr bool DEBUG = false;
+	constexpr bool DEBUG = @DEBUG_CPP_VALUE@;
+	constexpr bool WIREFRAME = @WIREFRAME_CPP_VALUE@;
 }
