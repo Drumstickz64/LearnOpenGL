@@ -130,8 +130,6 @@ int main() {
 	}
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glViewport(0, 0, constants::WINDOW_WIDTH, constants::WINDOW_HEIGHT);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
@@ -141,61 +139,63 @@ int main() {
 	std::string object_vertex_shader = fs_util::read_file(constants::SHADER_PATH / "object.vert");
 	std::string object_fragment_shader = fs_util::read_file(constants::SHADER_PATH / "object.frag");
 	Shader_Program object_shader = Shader_Program(object_vertex_shader, object_fragment_shader);
+	std::string screen_vertex_shader = fs_util::read_file(constants::SHADER_PATH / "screen.vert");
+	std::string screen_fragment_shader = fs_util::read_file(constants::SHADER_PATH / "screen.frag");
+	Shader_Program screen_shader = Shader_Program(screen_vertex_shader, screen_fragment_shader);
 #pragma endregion
 
 #pragma region textures
-	Texture cube_texture = Texture(constants::ASSET_PATH / "textures" / "marble.jpg", "texture_diffuse");
+	Texture cube_texture = Texture(constants::ASSET_PATH / "textures" / "container.jpg", "texture_diffuse");
 	Texture floor_texture = Texture(constants::ASSET_PATH / "textures" / "metal.png", "texture_diffuse");
-	Texture window_texture = Texture(constants::ASSET_PATH / "textures" / "window.png", "texture_diffuse");
 #pragma endregion
 
 #pragma region static_data
 	// clang-format off
 	float cube_vertices[] = {
-		// positions          // texture Coords
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-		0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		0.5f,  0.5f,  -0.5f,  1.0f, 1.0f,
-		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f, 0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+		// position           // texture coordianates
+		// Back face
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // Bottom-left
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
+		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f, // bottom-right
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f, // bottom-left
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+		// Front face
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f, // top-right
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f, // top-left
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
+		// Left face
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-left
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-left
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-right
+		// Right face
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // bottom-right
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // top-left
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-left
+		// Bottom face
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f, // top-left
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f, // bottom-left
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f, // bottom-right
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f, // top-right
+		// Top face
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f, // top-right
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f, // bottom-right
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f, // top-left
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f  // bottom-left
 	};
-
 	float plane_vertices[] = {
 		// positions          // texture Coords 
 		5.0f, -0.5f,   5.0f,  2.0f, 0.0f,
@@ -207,22 +207,18 @@ int main() {
 		5.0f, -0.5f,  -5.0f,  2.0f, 2.0f
 	};
 
-	float transparent_vertices[] = {
-        // positions         // texture Coords (swapped y coordinates because texture is flipped upside down)
-        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-        0.0f, -0.5f,  0.0f,  0.0f,  1.0f,
-        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
+	float quad_vertices[] = {
+		 // positions  // texture coords
+		 1.0f,  1.0f,  1.0f, 1.0f, // top right
+		-1.0f,  1.0f,  0.0f, 1.0f, // top left
+		 1.0f, -1.0f,  1.0f, 0.0f, // bottom right
 
-        0.0f,  0.5f,  0.0f,  0.0f,  0.0f,
-        1.0f, -0.5f,  0.0f,  1.0f,  1.0f,
-        1.0f,  0.5f,  0.0f,  1.0f,  0.0f
-    };
+		-1.0f, -1.0f,  0.0f, 0.0f, // bottom left
+		 1.0f, -1.0f,  1.0f, 0.0f, // bottom right
+		-1.0f,  1.0f,  0.0f, 1.0f, // top left
+	};
 	// clang-format on
-
-	std::vector<glm::vec3> windows{glm::vec3(-1.5f, 0.0f, -0.48f), glm::vec3(1.5f, 0.0f, 0.51f),
-								   glm::vec3(0.0f, 0.0f, 0.7f), glm::vec3(-0.3f, 0.0f, -2.3f),
-								   glm::vec3(0.5f, 0.0f, -0.6f)};
-
+	
 	// cube VAO
 	unsigned int cube_vao, cube_vbo;
 	glGenVertexArrays(1, &cube_vao);
@@ -247,21 +243,49 @@ int main() {
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glBindVertexArray(0);
-	// transparent VAO
-	unsigned int transparent_vao, transparent_vbo;
-	glGenVertexArrays(1, &transparent_vao);
-	glGenBuffers(1, &transparent_vbo);
-	glBindVertexArray(transparent_vao);
-	glBindBuffer(GL_ARRAY_BUFFER, transparent_vbo);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(transparent_vertices), &transparent_vertices, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
+	// quad VAO
+	unsigned int quad_vao, quad_vbo;
+	glGenVertexArrays(1, &quad_vao);
+	glGenBuffers(1, &quad_vbo);
+	glBindVertexArray(quad_vao);
+	glBindBuffer(GL_ARRAY_BUFFER, quad_vbo);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(quad_vertices), &quad_vertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	glBindVertexArray(0);
 
-	std::map<float, glm::vec3> sorted_windows;
+	GLuint fbo;
+	glGenFramebuffers(1, &fbo);
+	glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+	GLuint texture_colorbuffer;
+	glGenTextures(1, &texture_colorbuffer);
+	glBindTexture(GL_TEXTURE_2D, texture_colorbuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, constants::WINDOW_WIDTH, constants::WINDOW_HEIGHT, 0, GL_RGB,
+				 GL_UNSIGNED_INT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_colorbuffer, 0);
+
+	GLuint rbo;
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, constants::WINDOW_WIDTH, constants::WINDOW_HEIGHT);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		std::cerr << "ERROR::FRAMEBUFFER: the framebuffer is NOT complete" << std::endl;
+		return -1;
+	}
+
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #pragma endregion
 
 #pragma region loop
@@ -272,15 +296,16 @@ int main() {
 		float delta_time = time - last_frame;
 		last_frame = time;
 
-		sorted_windows.clear();
-
 		process_input(window, delta_time);
-
-		glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		glm::mat4 view = camera.calculate_view_matrix();
 		glm::mat4 projection = camera.calculate_projection_matrix();
+
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+		glEnable(GL_DEPTH_TEST);
+
+		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		object_shader.use();
 		object_shader.set_mat4("view", view);
@@ -307,23 +332,21 @@ int main() {
 		object_shader.set_mat4("model", model);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		// windows
-		glBindVertexArray(transparent_vao);
-		object_shader.set_texture("texture1", window_texture, 0);
-
-		for (glm::vec3 window_pos : windows) {
-			float distance = glm::distance(camera.pos, window_pos);
-			sorted_windows[distance] = window_pos;
-		}
-
-		for (auto it = sorted_windows.rbegin(); it != sorted_windows.rend(); it++) {
-			model = glm::mat4(1.0f);
-			model = glm::translate(model, it->second);
-			object_shader.set_mat4("model", model);
-			glDrawArrays(GL_TRIANGLES, 0, 6);
-		}
-
 		glBindVertexArray(0);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glDisable(GL_DEPTH_TEST);
+
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		screen_shader.use();
+		glBindVertexArray(quad_vao);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture_colorbuffer);
+		screen_shader.set_int("screenTexture", 0);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
