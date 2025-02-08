@@ -274,7 +274,14 @@ int main() {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_colorbuffer, 0);
+	GLuint texture_colorbuffer_mirror;
+	glGenTextures(1, &texture_colorbuffer_mirror);
+	glBindTexture(GL_TEXTURE_2D, texture_colorbuffer_mirror);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, constants::WINDOW_WIDTH, constants::WINDOW_HEIGHT, 0, GL_RGB,
+				 GL_UNSIGNED_INT, nullptr);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	GLuint rbo;
 	glGenRenderbuffers(1, &rbo);
@@ -302,18 +309,20 @@ int main() {
 
 		process_input(window, delta_time);
 
-		glm::mat4 view = camera.calculate_view_matrix();
 		glm::mat4 projection = camera.calculate_projection_matrix();
 
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 		glEnable(GL_DEPTH_TEST);
 
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		object_shader.use();
-		object_shader.set_mat4("view", view);
 		object_shader.set_mat4("projection", projection);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_colorbuffer, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glm::mat4 view = camera.calculate_view_matrix();
+		object_shader.set_mat4("view", view);
 
 		// floor
 		glBindVertexArray(plane_vao);
@@ -336,6 +345,34 @@ int main() {
 		object_shader.set_mat4("model", model);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_colorbuffer_mirror, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		camera.front *= -1.0f;
+		view = camera.calculate_view_matrix();
+		object_shader.set_mat4("view", view);
+
+		// floor
+		glBindVertexArray(plane_vao);
+		object_shader.set_texture("texture1", floor_texture, 0);
+		object_shader.set_mat4("model", glm::mat4(1.0f));
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		// cubes
+		object_shader.set_texture("texture1", cube_texture, 0);
+		// cube 1
+		glBindVertexArray(cube_vao);
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
+		object_shader.set_mat4("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		// cube 2
+		model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(2.0f, 0.0f, 0.0f));
+		object_shader.set_mat4("model", model);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		camera.front *= -1.0f;
 		glBindVertexArray(0);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -348,8 +385,17 @@ int main() {
 		glBindVertexArray(quad_vao);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, texture_colorbuffer);
 		screen_shader.set_int("screenTexture", 0);
+
+		model = glm::mat4(1.0f);
+		screen_shader.set_mat4("model", model);
+		glBindTexture(GL_TEXTURE_2D, texture_colorbuffer);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		model = glm::translate(model, glm::vec3(-0.75f, 0.5f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.2f));
+		screen_shader.set_mat4("model", model);
+		glBindTexture(GL_TEXTURE_2D, texture_colorbuffer_mirror);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 
 		glfwSwapBuffers(window);
