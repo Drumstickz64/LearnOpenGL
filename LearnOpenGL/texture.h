@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <string>
+#include <vector>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -20,5 +21,13 @@ struct Texture {
 					 std::string type,
 					 GLenum wrap_s = GL_REPEAT,
 					 GLenum wrap_t = GL_REPEAT);
+	void bind(GLenum slot) const;
+};
+
+struct Cubemap {
+	GLuint id = 0;
+
+	Cubemap() = default;
+	Cubemap(const std::vector<std::filesystem::path>& image_paths);
 	void bind(GLenum slot) const;
 };

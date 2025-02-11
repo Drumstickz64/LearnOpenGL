@@ -23,6 +23,7 @@ class Shader_Program {
 	void set_vec3(std::string_view name, const glm::vec3& value) const;
 	void set_mat4(std::string_view name, const glm::mat4& value) const;
 	void set_texture(std::string_view name, const Texture& value, GLenum slot) const;
+	void set_cubemap(std::string_view name, const Cubemap& value, GLenum slot) const;
 
    private:
 	GLint get_uniform_location(std::string_view name) const;

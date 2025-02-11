@@ -84,6 +84,10 @@ void Shader_Program::set_texture(std::string_view name, const Texture& value, GL
 	value.bind(slot);
 	set_int(name, slot);
 }
+void Shader_Program::set_cubemap(std::string_view name, const Cubemap& value, GLenum slot) const {
+	value.bind(slot);
+	set_int(name, slot);
+}
 
 GLint Shader_Program::get_uniform_location(std::string_view name) const {
 	GLint location = glGetUniformLocation(id, name.data());
